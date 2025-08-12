@@ -1,0 +1,49 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache and build
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+.cache/
+
+# Test, coverage, type checking
+.pytest_cache/
+.coverage*
+coverage.xml
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+# Editors/IDE
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+Icon?
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Logs & temp
+*.log
+*.tmp
+*.lock
+
+# Local environment files
+.env
+.env.*
+
+# Project artifacts (generated)
+artifacts/

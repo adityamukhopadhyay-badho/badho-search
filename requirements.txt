@@ -1,0 +1,6 @@
+numpy>=1.26
+pandas>=2.2
+faiss-cpu>=1.8.0
+jellyfish>=1.0.4
+requests>=2.31
+rich>=13.7 
