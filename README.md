@@ -1,4 +1,4 @@
-## Badho Search (Prototype, Sub-100ms Target)
+## Badho Search (Prototype: Sub-100ms)
 
 This project implements an offline-built FAISS index with real-time hybrid search (semantic + phonetic boost) using a local Ollama embeddings model.
 
