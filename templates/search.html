@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Badho Search with Facets</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .search-box {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+      }
+      .search-input {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .search-btn {
+        padding: 12px 24px;
+        background-color: #ff9900;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .search-btn:hover {
+        background-color: #e88800;
+      }
+      .main-content {
+        display: flex;
+        gap: 20px;
+      }
+      .facets-sidebar {
+        width: 250px;
+        background: white;
+        padding: 20px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        height: fit-content;
+      }
+      .facet-group {
+        margin-bottom: 20px;
+      }
+      .facet-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #eee;
+      }
+      .facet-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        font-size: 14px;
+      }
+      .facet-checkbox {
+        margin-right: 8px;
+      }
+      .facet-count {
+        margin-left: auto;
+        color: #666;
+      }
+      .results-area {
+        flex: 1;
+      }
+      .results-header {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .timing-info {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+      }
+      .product-card {
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+      }
+      .product-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #0066c0;
+      }
+      .product-brand {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+      .product-category {
+        color: #008a00;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .product-score {
+        font-size: 12px;
+        color: #666;
+        text-align: right;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+      .error {
+        background: #ffe6e6;
+        color: #c00;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+      .no-results {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+        background: white;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Badho Search with Facets</h1>
+        <p>Hybrid search powered by FAISS + PostgreSQL facets</p>
+      </div>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="Search for products..."
+          onkeypress="handleKeyPress(event)"
+        />
+        <select
+          id="resultCount"
+          style="
+            padding: 12px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          "
+        >
+          <option value="20">20 results</option>
+          <option value="50" selected>50 results</option>
+          <option value="100">100 results</option>
+        </select>
+        <button class="search-btn" onclick="performSearch()">Search</button>
+      </div>
+
+      <div class="main-content">
+        <div class="facets-sidebar" id="facetsSidebar">
+          <h3>Filters</h3>
+          <div id="facetsContainer">
+            <p>Enter a search term to see available filters</p>
+          </div>
+        </div>
+
+        <div class="results-area">
+          <div class="results-header" id="resultsHeader" style="display: none">
+            <div id="resultsCount"></div>
+            <div id="timingInfo" class="timing-info"></div>
+          </div>
+
+          <div id="errorMessage" class="error" style="display: none"></div>
+
+          <div id="loadingMessage" class="loading" style="display: none">
+            Searching...
+          </div>
+
+          <div id="noResults" class="no-results" style="display: none">
+            No results found. Try a different search term.
+          </div>
+
+          <div id="resultsContainer" class="product-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentQuery = "";
+      let currentFacets = {};
+
+      function handleKeyPress(event) {
+        if (event.key === "Enter") {
+          performSearch();
+        }
+      }
+
+      function performSearch() {
+        const query = document.getElementById("searchInput").value.trim();
+        if (!query) {
+          alert("Please enter a search term");
+          return;
+        }
+
+        currentQuery = query;
+        currentFacets = {}; // Reset facets on new search
+        searchWithFacets();
+      }
+
+      function searchWithFacets() {
+        if (!currentQuery) return;
+
+        // Show loading
+        showLoading(true);
+        hideError();
+        hideNoResults();
+
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.append("q", currentQuery);
+        params.append("k", document.getElementById("resultCount").value);
+
+        // Add facet filters
+        for (const [key, values] of Object.entries(currentFacets)) {
+          if (values && values.length > 0) {
+            for (const value of values) {
+              params.append(`facet_${key}`, value);
+            }
+          }
+        }
+
+        // Perform search
+        fetch(`/search?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            showLoading(false);
+
+            if (data.error) {
+              showError(data.error);
+              return;
+            }
+
+            displayResults(data.results, data.total_results);
+            displayFacets(data.facets);
+            displayTiming(data.timing);
+          })
+          .catch((error) => {
+            showLoading(false);
+            showError("Search failed: " + error.message);
+          });
+      }
+
+      function displayResults(results, totalResults) {
+        const container = document.getElementById("resultsContainer");
+        const header = document.getElementById("resultsHeader");
+        const countElement = document.getElementById("resultsCount");
+
+        if (!results || results.length === 0) {
+          header.style.display = "none";
+          container.innerHTML = "";
+          showNoResults(true);
+          return;
+        }
+
+        showNoResults(false);
+        header.style.display = "block";
+        countElement.innerHTML = `Showing ${results.length} of ${totalResults} results for "${currentQuery}"`;
+
+        container.innerHTML = results
+          .map(
+            (result) => `
+                <div class="product-card">
+                    <div class="product-title">${escapeHtml(
+                      result.label || "N/A"
+                    )}</div>
+                    <div class="product-brand">Brand: ${escapeHtml(
+                      result.brandLabel || result.brand_name || "N/A"
+                    )}</div>
+                    <div class="product-category">Category: ${escapeHtml(
+                      result.category || "N/A"
+                    )}</div>
+                    <div class="product-score">Relevance Score: ${
+                      result.score ? result.score.toFixed(4) : "N/A"
+                    }</div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function displayFacets(facets) {
+        const container = document.getElementById("facetsContainer");
+
+        if (!facets || Object.keys(facets).length === 0) {
+          container.innerHTML = "<p>No filters available</p>";
+          return;
+        }
+
+        container.innerHTML = Object.entries(facets)
+          .map(
+            ([key, options]) => `
+                <div class="facet-group">
+                    <div class="facet-title">${escapeHtml(
+                      formatFacetKey(key)
+                    )}</div>
+                    ${options
+                      .slice(0, 10)
+                      .map(
+                        (option) => `
+                        <div class="facet-item">
+                            <input 
+                                type="checkbox" 
+                                class="facet-checkbox" 
+                                id="facet_${key}_${option.value}"
+                                value="${escapeHtml(option.value)}"
+                                ${
+                                  isFacetSelected(key, option.value)
+                                    ? "checked"
+                                    : ""
+                                }
+                                onchange="toggleFacet('${key}', '${escapeHtml(
+                          option.value
+                        )}')"
+                            />
+                            <label for="facet_${key}_${option.value}">
+                                ${escapeHtml(option.display_name)}
+                            </label>
+                            <span class="facet-count">(${option.count})</span>
+                        </div>
+                    `
+                      )
+                      .join("")}
+                    ${
+                      options.length > 10
+                        ? `<div class="facet-item"><em>... and ${
+                            options.length - 10
+                          } more</em></div>`
+                        : ""
+                    }
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function displayTiming(timing) {
+        const element = document.getElementById("timingInfo");
+        if (timing) {
+          element.innerHTML = `Search completed in ${timing.total_ms.toFixed(
+            2
+          )}ms (embed: ${timing.embed_ms.toFixed(
+            2
+          )}ms, faiss: ${timing.faiss_ms.toFixed(
+            2
+          )}ms, rerank: ${timing.rerank_ms.toFixed(2)}ms)`;
+        } else {
+          element.innerHTML = "";
+        }
+      }
+
+      function toggleFacet(key, value) {
+        if (!currentFacets[key]) {
+          currentFacets[key] = [];
+        }
+
+        const index = currentFacets[key].indexOf(value);
+        if (index > -1) {
+          currentFacets[key].splice(index, 1);
+        } else {
+          currentFacets[key].push(value);
+        }
+
+        // Remove empty arrays
+        if (currentFacets[key].length === 0) {
+          delete currentFacets[key];
+        }
+
+        // Re-search with new facets
+        searchWithFacets();
+      }
+
+      function isFacetSelected(key, value) {
+        return currentFacets[key] && currentFacets[key].includes(value);
+      }
+
+      function formatFacetKey(key) {
+        return key
+          .split("_")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+      }
+
+      function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) return "";
+        return unsafe
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function showLoading(show) {
+        document.getElementById("loadingMessage").style.display = show
+          ? "block"
+          : "none";
+      }
+
+      function showError(message) {
+        const element = document.getElementById("errorMessage");
+        element.innerHTML = escapeHtml(message);
+        element.style.display = "block";
+      }
+
+      function hideError() {
+        document.getElementById("errorMessage").style.display = "none";
+      }
+
+      function showNoResults(show) {
+        document.getElementById("noResults").style.display = show
+          ? "block"
+          : "none";
+      }
+
+      function hideNoResults() {
+        document.getElementById("noResults").style.display = "none";
+      }
+    </script>
+  </body>
+</html>

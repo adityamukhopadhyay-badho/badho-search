@@ -10,7 +10,7 @@ CSV_PATH: Path = PROJECT_ROOT / "product_catalogue.csv"
 
 # Ollama
 OLLAMA_BASE_URL: str = "http://localhost:11434"
-OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
+OLLAMA_EMBED_MODEL: str = "nomic-embed-text:v1.5"
 OLLAMA_TIMEOUT_SECONDS: float = 30.0
 
 # Artifacts
