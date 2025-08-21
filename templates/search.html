@@ -5,150 +5,492 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Badho Search with Facets</title>
     <style>
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-tertiary: #f1f5f9;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --border-color: #e2e8f0;
+        --accent-color: #6F2DA8;
+        --accent-hover: #5B1F8A;
+        --accent-gold: #E0B500;
+        --accent-gold-hover: #C4A000;
+        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --radius: 12px;
+        --radius-sm: 8px;
+        --radius-lg: 16px;
+      }
+
+      [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border-color: #475569;
+        --accent-color: #8B5CF6;
+        --accent-hover: #7C3AED;
+        --accent-gold: #F59E0B;
+        --accent-gold-hover: #D97706;
+        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+      }
+
+      * {
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+
       body {
-        font-family: Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         margin: 0;
         padding: 20px;
-        background-color: #f5f5f5;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
       }
+
       .container {
         max-width: 1200px;
         margin: 0 auto;
       }
+
       .header {
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
+        position: relative;
       }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .logo {
+        height: 60px;
+        width: auto;
+        filter: drop-shadow(0 4px 8px rgba(111, 45, 168, 0.2));
+      }
+
+      .fallback-logo {
+        display: none;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        box-shadow: var(--shadow);
+      }
+
+      .header h1 {
+        margin: 0 0 8px 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+      }
+
+      .theme-toggle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow);
+      }
+
+      .theme-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent-color);
+      }
+
       .search-box {
         display: flex;
-        margin-bottom: 20px;
-        gap: 10px;
+        margin-bottom: 30px;
+        gap: 16px;
+        align-items: center;
       }
+
       .search-input {
         flex: 1;
-        padding: 12px;
+        padding: 16px 20px;
         font-size: 16px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: all 0.3s ease;
       }
+
+      .search-input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(111, 45, 168, 0.1);
+      }
+
+      .search-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .result-count-select {
+        padding: 16px 20px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .result-count-select:focus {
+        outline: none;
+        border-color: var(--accent-color);
+      }
+
       .search-btn {
-        padding: 12px 24px;
-        background-color: #ff9900;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: var(--radius);
         cursor: pointer;
         font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
       }
+
+      .search-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+      }
+
+      .search-btn:hover::before {
+        left: 100%;
+      }
+
       .search-btn:hover {
-        background-color: #e88800;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
       }
+
       .main-content {
         display: flex;
-        gap: 20px;
+        gap: 30px;
       }
+
       .facets-sidebar {
-        width: 250px;
-        background: white;
-        padding: 20px;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 280px;
+        background: var(--bg-secondary);
+        padding: 24px;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
         height: fit-content;
+        border: 1px solid var(--border-color);
       }
+
+      .facets-sidebar h3 {
+        margin: 0 0 20px 0;
+        color: var(--text-primary);
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
       .facet-group {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
       }
+
       .facet-title {
-        font-weight: bold;
-        margin-bottom: 10px;
-        padding-bottom: 5px;
-        border-bottom: 1px solid #eee;
+        font-weight: 600;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--accent-color);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
+
       .facet-item {
         display: flex;
         align-items: center;
-        margin-bottom: 5px;
+        margin-bottom: 12px;
         font-size: 14px;
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        transition: background-color 0.2s ease;
       }
+
+      .facet-item:hover {
+        background: var(--bg-tertiary);
+      }
+
       .facet-checkbox {
-        margin-right: 8px;
+        margin-right: 12px;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent-color);
       }
+
       .facet-count {
         margin-left: auto;
-        color: #666;
+        color: var(--text-muted);
+        font-size: 12px;
+        background: var(--accent-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 500;
       }
+
       .results-area {
         flex: 1;
       }
+
       .results-header {
-        background: white;
-        padding: 15px 20px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: var(--bg-secondary);
+        padding: 20px 24px;
+        border-radius: var(--radius-lg);
+        margin-bottom: 30px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border-color);
       }
+
       .timing-info {
-        font-size: 12px;
-        color: #666;
-        margin-top: 5px;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-sm);
+        display: inline-block;
       }
+
       .product-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
       }
+
       .product-card {
-        background: white;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        padding: 15px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
       }
+
+      .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--accent-color), var(--accent-gold));
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+
+      .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--accent-color);
+      }
+
       .product-title {
-        font-weight: bold;
-        margin-bottom: 8px;
-        color: #0066c0;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        line-height: 1.4;
       }
+
       .product-brand {
-        color: #666;
+        color: var(--text-secondary);
         font-size: 14px;
-        margin-bottom: 5px;
-      }
-      .product-category {
-        color: #008a00;
-        font-size: 12px;
         margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
+
+      .product-brand::before {
+        content: '🏷️';
+        font-size: 12px;
+      }
+
+      .product-category {
+        color: var(--accent-gold);
+        font-size: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .product-category::before {
+        content: '📂';
+        font-size: 10px;
+      }
+
       .product-score {
         font-size: 12px;
-        color: #666;
+        color: var(--text-muted);
         text-align: right;
+        background: var(--bg-tertiary);
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+        font-family: 'Monaco', 'Menlo', monospace;
       }
+
       .loading {
         text-align: center;
-        padding: 40px;
-        color: #666;
+        padding: 60px 40px;
+        color: var(--text-secondary);
+        font-size: 1.1rem;
       }
+
+      .loading::after {
+        content: '';
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 50%;
+        border-top-color: var(--accent-color);
+        animation: spin 1s ease-in-out infinite;
+        margin-left: 12px;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
       .error {
-        background: #ffe6e6;
-        color: #c00;
-        padding: 15px;
-        border-radius: 4px;
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 20px;
+        border-radius: var(--radius);
         margin-bottom: 20px;
+        border: 1px solid #fecaca;
+        border-left: 4px solid #dc2626;
       }
+
+      [data-theme="dark"] .error {
+        background: #450a0a;
+        color: #fca5a5;
+        border-color: #7f1d1d;
+        border-left-color: #fca5a5;
+      }
+
       .no-results {
         text-align: center;
-        padding: 40px;
-        color: #666;
-        background: white;
-        border-radius: 4px;
+        padding: 60px 40px;
+        color: var(--text-secondary);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        font-size: 1.1rem;
+      }
+
+      .no-results::before {
+        content: '🔍';
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 16px;
+        opacity: 0.6;
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          flex-direction: column;
+        }
+        
+        .facets-sidebar {
+          width: 100%;
+        }
+        
+        .search-box {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        
+        .product-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .logo-container {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .logo {
+          height: 50px;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <h1>Badho Search with Facets</h1>
-        <p>Hybrid search powered by FAISS + PostgreSQL facets</p>
+        <div class="logo-container">
+          <img src="/static/badho_logo.jpg" alt="Badho Logo" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="fallback-logo">B</div>
+          <div>
+            <h1>Badho Search</h1>
+            <p>Hybrid search powered by FAISS + PostgreSQL facets</p>
+          </div>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+          🌙
+        </button>
       </div>
 
       <div class="search-box">
@@ -161,12 +503,7 @@
         />
         <select
           id="resultCount"
-          style="
-            padding: 12px;
-            margin-right: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-          "
+          class="result-count-select"
         >
           <option value="20">20 results</option>
           <option value="50" selected>50 results</option>
@@ -179,7 +516,7 @@
         <div class="facets-sidebar" id="facetsSidebar">
           <h3>Filters</h3>
           <div id="facetsContainer">
-            <p>Enter a search term to see available filters</p>
+            <p style="color: var(--text-muted); font-style: italic;">Enter a search term to see available filters</p>
           </div>
         </div>
 
@@ -207,6 +544,54 @@
     <script>
       let currentQuery = "";
       let currentFacets = {};
+      let currentTheme = localStorage.getItem('theme') || 'light';
+
+      // Initialize theme
+      function initTheme() {
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        updateThemeToggle();
+      }
+
+      function toggleTheme() {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('theme', currentTheme);
+        updateThemeToggle();
+      }
+
+      function updateThemeToggle() {
+        const toggle = document.getElementById('themeToggle');
+        if (currentTheme === 'dark') {
+          toggle.innerHTML = '☀️';
+          toggle.title = 'Switch to light mode';
+        } else {
+          toggle.innerHTML = '🌙';
+          toggle.title = 'Switch to dark mode';
+        }
+      }
+
+      // Initialize theme on page load
+      initTheme();
+
+      // Handle logo loading
+      function initLogo() {
+        const logo = document.querySelector('.logo');
+        const fallback = document.querySelector('.fallback-logo');
+        
+        if (logo && fallback) {
+          logo.addEventListener('load', function() {
+            fallback.style.display = 'none';
+          });
+          
+          logo.addEventListener('error', function() {
+            logo.style.display = 'none';
+            fallback.style.display = 'flex';
+          });
+        }
+      }
+
+      // Initialize logo on page load
+      initLogo();
 
       function handleKeyPress(event) {
         if (event.key === "Enter") {
@@ -292,13 +677,13 @@
                     <div class="product-title">${escapeHtml(
                       result.label || "N/A"
                     )}</div>
-                    <div class="product-brand">Brand: ${escapeHtml(
+                    <div class="product-brand">${escapeHtml(
                       result.brandLabel || result.brand_name || "N/A"
                     )}</div>
-                    <div class="product-category">Category: ${escapeHtml(
+                    <div class="product-category">${escapeHtml(
                       result.category || "N/A"
                     )}</div>
-                    <div class="product-score">Relevance Score: ${
+                    <div class="product-score">Score: ${
                       result.score ? result.score.toFixed(4) : "N/A"
                     }</div>
                 </div>
@@ -311,7 +696,7 @@
         const container = document.getElementById("facetsContainer");
 
         if (!facets || Object.keys(facets).length === 0) {
-          container.innerHTML = "<p>No filters available</p>";
+          container.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No filters available</p>";
           return;
         }
 
@@ -344,14 +729,14 @@
                             <label for="facet_${key}_${option.value}">
                                 ${escapeHtml(option.display_name)}
                             </label>
-                            <span class="facet-count">(${option.count})</span>
+                            <span class="facet-count">${option.count}</span>
                         </div>
                     `
                       )
                       .join("")}
                     ${
                       options.length > 10
-                        ? `<div class="facet-item"><em>... and ${
+                        ? `<div class="facet-item"><em style="color: var(--text-muted);">... and ${
                             options.length - 10
                           } more</em></div>`
                         : ""
