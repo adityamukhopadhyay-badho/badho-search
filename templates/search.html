@@ -472,7 +472,31 @@
 
       <div class="main-content">
         <div class="facets-sidebar" id="facetsSidebar">
-          <h3>Filters</h3>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 15px;
+            "
+          >
+            <h3 style="margin: 0">Filters</h3>
+            <button
+              id="facetModeToggle"
+              onclick="toggleFacetMode()"
+              style="
+                padding: 5px 10px;
+                background: #f0f0f0;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+              "
+              title="Switch between showing all facets or only active facets"
+            >
+              All Facets
+            </button>
+          </div>
           <div id="facetsContainer">
             <p style="color: var(--text-muted); font-style: italic;">Enter a search term to see available filters</p>
           </div>
@@ -503,6 +527,7 @@
       let currentQuery = "";
       let currentFacets = {};
       let currentTheme = localStorage.getItem('theme') || 'light';
+      let onlyActiveFacets = false;
 
       // Initialize theme
       function initTheme() {
@@ -561,6 +586,11 @@
         const params = new URLSearchParams();
         params.append("q", currentQuery);
         params.append("k", document.getElementById("resultCount").value);
+
+        // Add active facets parameter
+        if (onlyActiveFacets) {
+          params.append("active_facets", "true");
+        }
 
         // Add facet filters
         for (const [key, values] of Object.entries(currentFacets)) {
@@ -646,10 +676,14 @@
                       formatFacetKey(key)
                     )}</div>
                     ${options
-                      .slice(0, 10)
+                      .slice(0, key === "price_range" ? 20 : 10)
                       .map(
                         (option) => `
-                        <div class="facet-item">
+                        <div class="facet-item" ${
+                          key === "price_range"
+                            ? 'style="border-left: 3px solid #0066cc; padding-left: 8px; margin-bottom: 8px;"'
+                            : ""
+                        }>
                             <input 
                                 type="checkbox" 
                                 class="facet-checkbox" 
@@ -664,10 +698,22 @@
                           option.value
                         )}')"
                             />
-                            <label for="facet_${key}_${option.value}">
-                                ${escapeHtml(option.display_name)}
+                            <label for="facet_${key}_${option.value}" ${
+                          key === "price_range"
+                            ? 'style="font-weight: 500; color: #0066cc;"'
+                            : ""
+                        }>
+                                ${
+                                  key === "price_range"
+                                    ? escapeHtml(option.display_name)
+                                    : escapeHtml(option.display_name)
+                                }
                             </label>
-                            <span class="facet-count">${option.count}</span>
+                            ${
+                              key === "price_range"
+                                ? ""
+                                : `<span class="facet-count">(${option.count})</span>`
+                            }
                         </div>
                     `
                       )
@@ -726,6 +772,9 @@
       }
 
       function formatFacetKey(key) {
+        if (key === "price_range") {
+          return "💰 Price Range";
+        }
         return key
           .split("_")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -767,6 +816,30 @@
 
       function hideNoResults() {
         document.getElementById("noResults").style.display = "none";
+      }
+
+      function toggleFacetMode() {
+        onlyActiveFacets = !onlyActiveFacets;
+        const button = document.getElementById("facetModeToggle");
+
+        if (onlyActiveFacets) {
+          button.textContent = "Active Only";
+          button.style.background = "#ff9900";
+          button.style.color = "white";
+          button.title =
+            "Showing only active facets. Click to show all facets.";
+        } else {
+          button.textContent = "All Facets";
+          button.style.background = "#f0f0f0";
+          button.style.color = "black";
+          button.title =
+            "Showing all facets. Click to show only active facets.";
+        }
+
+        // Re-run search if we have a query
+        if (currentQuery) {
+          searchWithFacets();
+        }
       }
     </script>
   </body>

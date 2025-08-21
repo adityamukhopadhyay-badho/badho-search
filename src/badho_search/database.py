@@ -87,11 +87,12 @@ class ProductDatabase:
             logger.error(f"Failed to get brandSKU data: {e}")
             return {}
     
-    def get_facets_by_brand_sku_ids(self, brand_sku_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    def get_facets_by_brand_sku_ids(self, brand_sku_ids: List[str], only_active_keys: bool = False) -> Dict[str, List[Dict[str, Any]]]:
         """Get facets for given brandSKU IDs"""
         if not brand_sku_ids:
             return {}
         
+        # Base query for regular facets
         query = """
         SELECT 
             bsf."brandSKUId" as brand_sku_id,
@@ -103,8 +104,22 @@ class ProductDatabase:
         WHERE bsf."brandSKUId" = ANY(%s)
         AND bsf."standardKey" IS NOT NULL
         AND bsf."isActive" = true
-        ORDER BY bsf."standardKey", facet_value
+        AND COALESCE(bsf."standardValue", bsf.value) IS NOT NULL
+        AND TRIM(COALESCE(bsf."standardValue", bsf.value)) != ''
+        AND LOWER(TRIM(COALESCE(bsf."standardValue", bsf.value))) NOT IN ('n/a', 'na', 'null', 'none', '-')
         """
+        
+        # Add active keys filter if requested
+        if only_active_keys:
+            query += """
+            AND EXISTS (
+                SELECT 1 FROM brands."standardFacetKeys" sfk 
+                WHERE sfk."standardKey" = bsf."standardKey" 
+                AND sfk."isActive" = true
+            )
+            """
+        
+        query += " ORDER BY bsf.\"standardKey\", facet_value"
         
         try:
             results = self.db.execute_query(query, (brand_sku_ids,))
@@ -115,10 +130,79 @@ class ProductDatabase:
                 if key not in facets:
                     facets[key] = []
                 facets[key].append(dict(row))
+            
+            # Add price range facet
+            price_facets = self.get_price_range_facets(brand_sku_ids)
+            if price_facets:
+                facets['price_range'] = price_facets
+                
             return facets
         except Exception as e:
             logger.error(f"Failed to get facets data: {e}")
             return {}
+    
+    def get_price_range_facets(self, brand_sku_ids: List[str]) -> List[Dict[str, Any]]:
+        """Get price range facets for given brandSKU IDs"""
+        if not brand_sku_ids:
+            return []
+        
+        query = """
+        SELECT 
+            CASE 
+                WHEN bs."consumerSellingPrice" < 100 THEN 'Under ₹100'
+                WHEN bs."consumerSellingPrice" < 250 THEN '₹100 - ₹250' 
+                WHEN bs."consumerSellingPrice" < 500 THEN '₹250 - ₹500'
+                WHEN bs."consumerSellingPrice" < 1000 THEN '₹500 - ₹1,000'
+                WHEN bs."consumerSellingPrice" < 2500 THEN '₹1,000 - ₹2,500'
+                WHEN bs."consumerSellingPrice" < 5000 THEN '₹2,500 - ₹5,000'
+                ELSE 'Above ₹5,000'
+            END as price_range,
+            CASE 
+                WHEN bs."consumerSellingPrice" < 100 THEN 0
+                WHEN bs."consumerSellingPrice" < 250 THEN 100 
+                WHEN bs."consumerSellingPrice" < 500 THEN 250
+                WHEN bs."consumerSellingPrice" < 1000 THEN 500
+                WHEN bs."consumerSellingPrice" < 2500 THEN 1000
+                WHEN bs."consumerSellingPrice" < 5000 THEN 2500
+                ELSE 5000
+            END as min_price,
+            CASE 
+                WHEN bs."consumerSellingPrice" < 100 THEN 99.99
+                WHEN bs."consumerSellingPrice" < 250 THEN 249.99 
+                WHEN bs."consumerSellingPrice" < 500 THEN 499.99
+                WHEN bs."consumerSellingPrice" < 1000 THEN 999.99
+                WHEN bs."consumerSellingPrice" < 2500 THEN 2499.99
+                WHEN bs."consumerSellingPrice" < 5000 THEN 4999.99
+                ELSE 999999
+            END as max_price,
+            COUNT(*) as count
+        FROM brands."brandSKU" bs
+        WHERE bs.id = ANY(%s)
+        AND bs."consumerSellingPrice" > 0
+        AND bs."consumerSellingPrice" < 100000
+        GROUP BY 1, 2, 3
+        HAVING COUNT(*) > 0
+        ORDER BY min_price
+        """
+        
+        try:
+            results = self.db.execute_query(query, (brand_sku_ids,))
+            price_facets = []
+            for row in results:
+                price_facets.append({
+                    'brand_sku_id': '',  # Not applicable for price ranges
+                    'standard_key': 'price_range',
+                    'facet_value': row['price_range'],
+                    'original_value': row['price_range'],
+                    'standard_value': row['price_range'],
+                    'count': row['count'],
+                    'min_price': float(row['min_price']),
+                    'max_price': float(row['max_price'])
+                })
+            return price_facets
+        except Exception as e:
+            logger.error(f"Failed to get price range facets: {e}")
+            return []
     
     def get_filtered_products(self, facet_filters: Dict[str, List[str]], product_names: List[str] = None) -> List[str]:
         """Get product names that match the given facet filters"""
@@ -176,17 +260,43 @@ class ProductDatabase:
         
         for standard_key, values in facet_filters.items():
             if values:  # Only add condition if values list is not empty
-                conditions.append(f"""
-                    EXISTS (
-                        SELECT 1 FROM brands."brandSKUFacet" bsf2 
-                        WHERE bsf2."brandSKUId" = bs.id 
-                        AND bsf2."standardKey" = %s 
-                        AND COALESCE(bsf2."standardValue", bsf2.value) = ANY(%s)
-                        AND bsf2."isActive" = true
-                    )
-                """)
-                params.append(standard_key)
-                params.append(values)
+                if standard_key == 'price_range':
+                    # Handle price range filtering
+                    price_conditions = []
+                    for value in values:
+                        if value == 'Under ₹100':
+                            price_conditions.append('bs."consumerSellingPrice" < 100')
+                        elif value == '₹100 - ₹250':
+                            price_conditions.append('(bs."consumerSellingPrice" >= 100 AND bs."consumerSellingPrice" < 250)')
+                        elif value == '₹250 - ₹500':
+                            price_conditions.append('(bs."consumerSellingPrice" >= 250 AND bs."consumerSellingPrice" < 500)')
+                        elif value == '₹500 - ₹1,000':
+                            price_conditions.append('(bs."consumerSellingPrice" >= 500 AND bs."consumerSellingPrice" < 1000)')
+                        elif value == '₹1,000 - ₹2,500':
+                            price_conditions.append('(bs."consumerSellingPrice" >= 1000 AND bs."consumerSellingPrice" < 2500)')
+                        elif value == '₹2,500 - ₹5,000':
+                            price_conditions.append('(bs."consumerSellingPrice" >= 2500 AND bs."consumerSellingPrice" < 5000)')
+                        elif value == 'Above ₹5,000':
+                            price_conditions.append('bs."consumerSellingPrice" >= 5000')
+                    
+                    if price_conditions:
+                        conditions.append(f"({' OR '.join(price_conditions)})")
+                else:
+                    # Handle regular facet filtering
+                    conditions.append(f"""
+                        EXISTS (
+                            SELECT 1 FROM brands."brandSKUFacet" bsf2 
+                            WHERE bsf2."brandSKUId" = bs.id 
+                            AND bsf2."standardKey" = %s 
+                            AND COALESCE(bsf2."standardValue", bsf2.value) = ANY(%s)
+                            AND bsf2."isActive" = true
+                            AND COALESCE(bsf2."standardValue", bsf2.value) IS NOT NULL
+                            AND TRIM(COALESCE(bsf2."standardValue", bsf2.value)) != ''
+                            AND LOWER(TRIM(COALESCE(bsf2."standardValue", bsf2.value))) NOT IN ('n/a', 'na', 'null', 'none', '-')
+                        )
+                    """)
+                    params.append(standard_key)
+                    params.append(values)
         
         if not conditions:
             return brand_sku_ids

@@ -36,7 +36,7 @@ class SearchFacetSystem:
         self.search_engine = search_engine
         self.product_db = product_db
     
-    def search_with_facets(self, query: str, facet_filters: Dict[str, List[str]] = None, k: int = 20) -> Dict[str, Any]:
+    def search_with_facets(self, query: str, facet_filters: Dict[str, List[str]] = None, k: int = 20, only_active_facets: bool = False) -> Dict[str, Any]:
         """Perform hybrid search and return results with facets"""
         try:
             # Step 1: Get search results from FAISS
@@ -92,7 +92,7 @@ class SearchFacetSystem:
                     brand_sku_ids.append(brand_sku['brand_sku_id'])
             
             # Step 6: Get facets for all brandSKU IDs (show all possible facets from search results)
-            facets = self.product_db.get_facets_by_brand_sku_ids(brand_sku_ids)
+            facets = self.product_db.get_facets_by_brand_sku_ids(brand_sku_ids, only_active_facets)
             
             # Step 7: Process facets for UI display
             processed_facets = self._process_facets_for_ui(facets)
@@ -122,25 +122,39 @@ class SearchFacetSystem:
         processed = {}
         
         for standard_key, facet_items in facets.items():
-            # Count occurrences of each facet value
-            value_counts = {}
-            for item in facet_items:
-                value = item['facet_value']
-                if value not in value_counts:
-                    value_counts[value] = 0
-                value_counts[value] += 1
-            
-            # Create list of facet options with counts
-            facet_options = []
-            for value, count in value_counts.items():
-                facet_options.append({
-                    'value': value,
-                    'count': count,
-                    'display_name': value
-                })
-            
-            # Sort by count descending
-            facet_options.sort(key=lambda x: x['count'], reverse=True)
+            if standard_key == 'price_range':
+                # Handle price range facets specially
+                facet_options = []
+                for item in facet_items:
+                    facet_options.append({
+                        'value': item['facet_value'],
+                        'count': item['count'],
+                        'display_name': f"{item['facet_value']} ({item['count']})",
+                        'min_price': item.get('min_price'),
+                        'max_price': item.get('max_price')
+                    })
+                # Sort price ranges by min_price
+                facet_options.sort(key=lambda x: x.get('min_price', 0))
+            else:
+                # Count occurrences of each facet value for regular facets
+                value_counts = {}
+                for item in facet_items:
+                    value = item['facet_value']
+                    if value not in value_counts:
+                        value_counts[value] = 0
+                    value_counts[value] += 1
+                
+                # Create list of facet options with counts
+                facet_options = []
+                for value, count in value_counts.items():
+                    facet_options.append({
+                        'value': value,
+                        'count': count,
+                        'display_name': value
+                    })
+                
+                # Sort by count descending
+                facet_options.sort(key=lambda x: x['count'], reverse=True)
             
             processed[standard_key] = facet_options
         
@@ -182,6 +196,7 @@ def search():
     """API endpoint for search with facets"""
     query = request.args.get('q', '').strip()
     k = int(request.args.get('k', 50))
+    only_active_facets = request.args.get('active_facets', 'false').lower() == 'true'
     
     # Parse facet filters from query parameters
     facet_filters = {}
@@ -202,7 +217,7 @@ def search():
         })
     
     # Perform search with facets
-    search_results = search_system.search_with_facets(query, facet_filters, k)
+    search_results = search_system.search_with_facets(query, facet_filters, k, only_active_facets)
     
     return jsonify(search_results)
 
