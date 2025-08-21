@@ -13,12 +13,14 @@
         --text-secondary: #64748b;
         --text-muted: #94a3b8;
         --border-color: #e2e8f0;
-        --accent-color: #6F2DA8;
-        --accent-hover: #5B1F8A;
-        --accent-gold: #E0B500;
-        --accent-gold-hover: #C4A000;
-        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --accent-color: #6f2da8;
+        --accent-hover: #5b1f8a;
+        --accent-gold: #e0b500;
+        --accent-gold-hover: #c4a000;
+        --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+          0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
         --radius: 12px;
         --radius-sm: 8px;
         --radius-lg: 16px;
@@ -32,20 +34,23 @@
         --text-secondary: #cbd5e1;
         --text-muted: #94a3b8;
         --border-color: #475569;
-        --accent-color: #8B5CF6;
-        --accent-hover: #7C3AED;
-        --accent-gold: #F59E0B;
-        --accent-gold-hover: #D97706;
+        --accent-color: #8b5cf6;
+        --accent-hover: #7c3aed;
+        --accent-gold: #f59e0b;
+        --accent-gold-hover: #d97706;
         --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+          0 4px 6px -2px rgba(0, 0, 0, 0.2);
       }
 
       * {
-        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease,
+          border-color 0.3s ease, box-shadow 0.3s ease;
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
         margin: 0;
         padding: 20px;
         background-color: var(--bg-primary);
@@ -68,7 +73,11 @@
         margin: 0 0 8px 0;
         font-size: 2.5rem;
         font-weight: 700;
-        background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
+        background: linear-gradient(
+          135deg,
+          var(--accent-color),
+          var(--accent-gold)
+        );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -151,7 +160,11 @@
 
       .search-btn {
         padding: 16px 32px;
-        background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+        background: linear-gradient(
+          135deg,
+          var(--accent-color),
+          var(--accent-hover)
+        );
         color: white;
         border: none;
         border-radius: var(--radius);
@@ -165,13 +178,18 @@
       }
 
       .search-btn::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
         transition: left 0.5s;
       }
 
@@ -182,93 +200,58 @@
       .search-btn:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
-        background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+        background: linear-gradient(
+          135deg,
+          var(--accent-hover),
+          var(--accent-color)
+        );
       }
 
       .main-content {
         display: flex;
-        gap: 20px;
+        gap: 30px;
       }
 
       .facets-sidebar {
-        width: 260px;
+        width: 280px;
         background: var(--bg-secondary);
-        padding: 16px;
-        border-radius: var(--radius);
+        padding: 24px;
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow);
         height: fit-content;
         border: 1px solid var(--border-color);
       }
 
       .facets-sidebar h3 {
-        margin: 0 0 12px 0;
+        margin: 0 0 20px 0;
         color: var(--text-primary);
-        font-size: 0.9rem;
+        font-size: 1.2rem;
         font-weight: 600;
       }
 
       .facet-group {
-        margin-bottom: 16px;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 12px;
-      }
-
-      .facet-group:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
+        margin-bottom: 24px;
       }
 
       .facet-title {
         font-weight: 600;
-        margin-bottom: 8px;
-        padding-bottom: 4px;
-        border-bottom: 1px solid var(--accent-color);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--accent-color);
         color: var(--text-primary);
-        font-size: 0.75rem;
+        font-size: 0.95rem;
         text-transform: uppercase;
-        letter-spacing: 0.2px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        user-select: none;
-      }
-
-      .facet-title:hover {
-        color: var(--accent-color);
-      }
-
-      .facet-title::after {
-        content: '▼';
-        font-size: 0.6rem;
-        color: var(--text-muted);
-        transition: transform 0.2s ease;
-      }
-
-      .facet-group.collapsed .facet-title::after {
-        transform: rotate(-90deg);
-      }
-
-      .facet-content {
-        transition: all 0.3s ease;
-        overflow: hidden;
-      }
-
-      .facet-group.collapsed .facet-content {
-        max-height: 0;
-        opacity: 0;
-        margin-top: 0;
+        letter-spacing: 0.5px;
       }
 
       .facet-item {
         display: flex;
         align-items: center;
-        margin-bottom: 4px;
-        font-size: 12px;
-        padding: 2px 6px;
-        border-radius: 4px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
         transition: background-color 0.2s ease;
-        min-height: 20px;
       }
 
       .facet-item:hover {
@@ -276,71 +259,21 @@
       }
 
       .facet-checkbox {
-        margin-right: 6px;
-        width: 14px;
-        height: 14px;
+        margin-right: 12px;
+        width: 18px;
+        height: 18px;
         accent-color: var(--accent-color);
-        cursor: pointer;
-      }
-
-      .facet-label {
-        flex: 1;
-        cursor: pointer;
-        color: var(--text-secondary);
-        font-size: 12px;
-        line-height: 1.2;
       }
 
       .facet-count {
         margin-left: auto;
         color: var(--text-muted);
-        font-size: 10px;
-        background: var(--bg-tertiary);
-        padding: 1px 4px;
-        border-radius: 6px;
-        font-weight: 400;
-        min-width: 16px;
-        text-align: center;
-      }
-
-      .facet-mode-toggle {
+        font-size: 12px;
+        background: var(--accent-color);
+        color: white;
         padding: 4px 8px;
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 10px;
-        color: var(--text-secondary);
-        transition: all 0.2s ease;
+        border-radius: 12px;
         font-weight: 500;
-      }
-
-      .facet-mode-toggle:hover {
-        background: var(--accent-color);
-        color: white;
-        border-color: var(--accent-color);
-      }
-
-      .facet-mode-toggle.active {
-        background: var(--accent-color);
-        color: white;
-        border-color: var(--accent-color);
-      }
-
-      .price-range-facet {
-        border-left: 2px solid var(--accent-color);
-        padding-left: 8px;
-        margin-bottom: 4px;
-      }
-
-      .price-range-facet .facet-label {
-        color: var(--accent-color);
-        font-weight: 500;
-      }
-
-      .price-range-facet .facet-count {
-        background: var(--accent-color);
-        color: white;
       }
 
       .results-area {
@@ -384,13 +317,17 @@
       }
 
       .product-card::before {
-        content: '';
+        content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, var(--accent-color), var(--accent-gold));
+        background: linear-gradient(
+          90deg,
+          var(--accent-color),
+          var(--accent-gold)
+        );
         border-radius: var(--radius-lg) var(--radius-lg) 0 0;
       }
 
@@ -418,7 +355,7 @@
       }
 
       .product-brand::before {
-        content: '🏷️';
+        content: "🏷️";
         font-size: 12px;
       }
 
@@ -435,7 +372,7 @@
       }
 
       .product-category::before {
-        content: '📂';
+        content: "📂";
         font-size: 10px;
       }
 
@@ -447,7 +384,7 @@
         padding: 6px 12px;
         border-radius: var(--radius-sm);
         font-weight: 500;
-        font-family: 'Monaco', 'Menlo', monospace;
+        font-family: "Monaco", "Menlo", monospace;
       }
 
       .loading {
@@ -458,7 +395,7 @@
       }
 
       .loading::after {
-        content: '';
+        content: "";
         display: inline-block;
         width: 20px;
         height: 20px;
@@ -470,7 +407,9 @@
       }
 
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .error {
@@ -501,7 +440,7 @@
       }
 
       .no-results::before {
-        content: '🔍';
+        content: "🔍";
         font-size: 3rem;
         display: block;
         margin-bottom: 16px;
@@ -512,16 +451,16 @@
         .main-content {
           flex-direction: column;
         }
-        
+
         .facets-sidebar {
           width: 100%;
         }
-        
+
         .search-box {
           flex-direction: column;
           align-items: stretch;
         }
-        
+
         .product-grid {
           grid-template-columns: 1fr;
         }
@@ -548,10 +487,7 @@
           placeholder="Search for products..."
           onkeypress="handleKeyPress(event)"
         />
-        <select
-          id="resultCount"
-          class="result-count-select"
-        >
+        <select id="resultCount" class="result-count-select">
           <option value="20">20 results</option>
           <option value="50" selected>50 results</option>
           <option value="100">100 results</option>
@@ -566,21 +502,30 @@
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 10px;
+              margin-bottom: 15px;
             "
           >
             <h3 style="margin: 0">Filters</h3>
             <button
               id="facetModeToggle"
               onclick="toggleFacetMode()"
-              class="facet-mode-toggle"
+              style="
+                padding: 5px 10px;
+                background: #f0f0f0;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+              "
               title="Switch between showing all facets or only active facets"
             >
               All Facets
             </button>
           </div>
           <div id="facetsContainer">
-            <p style="color: var(--text-muted); font-style: italic; font-size: 11px; margin: 0;">Enter a search term to see available filters</p>
+            <p style="color: var(--text-muted); font-style: italic">
+              Enter a search term to see available filters
+            </p>
           </div>
         </div>
 
@@ -608,30 +553,30 @@
     <script>
       let currentQuery = "";
       let currentFacets = {};
-      let currentTheme = localStorage.getItem('theme') || 'light';
+      let currentTheme = localStorage.getItem("theme") || "light";
       let onlyActiveFacets = false;
 
       // Initialize theme
       function initTheme() {
-        document.documentElement.setAttribute('data-theme', currentTheme);
+        document.documentElement.setAttribute("data-theme", currentTheme);
         updateThemeToggle();
       }
 
       function toggleTheme() {
-        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', currentTheme);
-        localStorage.setItem('theme', currentTheme);
+        currentTheme = currentTheme === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        localStorage.setItem("theme", currentTheme);
         updateThemeToggle();
       }
 
       function updateThemeToggle() {
-        const toggle = document.getElementById('themeToggle');
-        if (currentTheme === 'dark') {
-          toggle.innerHTML = '☀️';
-          toggle.title = 'Switch to light mode';
+        const toggle = document.getElementById("themeToggle");
+        if (currentTheme === "dark") {
+          toggle.innerHTML = "☀️";
+          toggle.title = "Switch to light mode";
         } else {
-          toggle.innerHTML = '🌙';
-          toggle.title = 'Switch to dark mode';
+          toggle.innerHTML = "🌙";
+          toggle.title = "Switch to dark mode";
         }
       }
 
@@ -742,6 +687,118 @@
           .join("");
       }
 
+      function displayFacets(facets) {
+        const container = document.getElementById("facetsContainer");
+
+        if (!facets || Object.keys(facets).length === 0) {
+          container.innerHTML =
+            "<p style='color: var(--text-muted); font-style: italic;'>No filters available</p>";
+          return;
+        }
+
+        container.innerHTML = Object.entries(facets)
+          .map(
+            ([key, options]) => `
+                <div class="facet-group">
+                    <div class="facet-title">${escapeHtml(
+                      formatFacetKey(key)
+                    )}</div>
+                    ${options
+                      .slice(0, key === "price_range" ? 20 : 10)
+                      .map(
+                        (option) => `
+                        <div class="facet-item" ${
+                          key === "price_range"
+                            ? 'style="border-left: 3px solid #0066cc; padding-left: 8px; margin-bottom: 8px;"'
+                            : ""
+                        }>
+                            <input 
+                                type="checkbox" 
+                                class="facet-checkbox" 
+                                id="facet_${key}_${option.value}"
+                                value="${escapeHtml(option.value)}"
+                                ${
+                                  isFacetSelected(key, option.value)
+                                    ? "checked"
+                                    : ""
+                                }
+                                onchange="toggleFacet('${key}', '${escapeHtml(
+                          option.value
+                        )}')"
+                            />
+                            <label for="facet_${key}_${option.value}" ${
+                          key === "price_range"
+                            ? 'style="font-weight: 500; color: #0066cc;"'
+                            : ""
+                        }>
+                                ${
+                                  key === "price_range"
+                                    ? escapeHtml(option.display_name)
+                                    : escapeHtml(option.display_name)
+                                }
+                            </label>
+                            ${
+                              key === "price_range"
+                                ? ""
+                                : `<span class="facet-count">(${option.count})</span>`
+                            }
+                        </div>
+                    `
+                      )
+                      .join("")}
+                    ${
+                      options.length > 10
+                        ? `<div class="facet-item"><em style="color: var(--text-muted);">... and ${
+                            options.length - 10
+                          } more</em></div>`
+                        : ""
+                    }
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function displayTiming(timing) {
+        const element = document.getElementById("timingInfo");
+        if (timing) {
+          element.innerHTML = `Search completed in ${timing.total_ms.toFixed(
+            2
+          )}ms (embed: ${timing.embed_ms.toFixed(
+            2
+          )}ms, faiss: ${timing.faiss_ms.toFixed(
+            2
+          )}ms, rerank: ${timing.rerank_ms.toFixed(2)}ms)`;
+        } else {
+          element.innerHTML = "";
+        }
+      }
+
+      function toggleFacet(key, value) {
+        if (!currentFacets[key]) {
+          currentFacets[key] = [];
+        }
+
+        const index = currentFacets[key].indexOf(value);
+        if (index > -1) {
+          currentFacets[key].splice(index, 1);
+        } else {
+          currentFacets[key].push(value);
+        }
+
+        // Remove empty arrays
+        if (currentFacets[key].length === 0) {
+          delete currentFacets[key];
+        }
+
+        // Re-search with new facets
+        searchWithFacets();
+      }
+
+      function isFacetSelected(key, value) {
+        return currentFacets[key] && currentFacets[key].includes(value);
+      }
+
       function formatFacetKey(key) {
         if (key === "price_range") {
           return "💰 Price Range";
@@ -795,160 +852,22 @@
 
         if (onlyActiveFacets) {
           button.textContent = "Active Only";
-          button.classList.add('active');
-          button.title = "Showing only active facets. Click to show all facets.";
+          button.style.background = "#ff9900";
+          button.style.color = "white";
+          button.title =
+            "Showing only active facets. Click to show all facets.";
         } else {
           button.textContent = "All Facets";
-          button.classList.remove('active');
-          button.title = "Showing all facets. Click to show only active facets.";
+          button.style.background = "#f0f0f0";
+          button.style.color = "black";
+          button.title =
+            "Showing all facets. Click to show only active facets.";
         }
 
         // Re-run search if we have a query
         if (currentQuery) {
           searchWithFacets();
         }
-      }
-
-      function toggleFacetGroup(key) {
-        const facetGroup = document.querySelector(`[data-key="${key}"]`);
-        if (!facetGroup) return;
-        
-        const content = facetGroup.querySelector('.facet-content');
-        const title = facetGroup.querySelector('.facet-title');
-        
-        if (facetGroup.classList.contains('collapsed')) {
-          facetGroup.classList.remove('collapsed');
-          content.style.maxHeight = content.scrollHeight + 'px';
-          content.style.opacity = '1';
-          content.style.marginTop = '8px';
-        } else {
-          facetGroup.classList.add('collapsed');
-          content.style.maxHeight = '0';
-          content.style.opacity = '0';
-          content.style.marginTop = '0';
-        }
-      }
-
-      // Initialize facets as expanded by default
-      function initFacetGroups() {
-        const facetGroups = document.querySelectorAll('.facet-group');
-        facetGroups.forEach(group => {
-          const content = group.querySelector('.facet-content');
-          if (content) {
-            content.style.maxHeight = content.scrollHeight + 'px';
-            content.style.opacity = '1';
-            content.style.marginTop = '8px';
-          }
-        });
-      }
-
-      // Initialize facets after they're displayed
-      function displayFacets(facets) {
-        const container = document.getElementById("facetsContainer");
-
-        if (!facets || Object.keys(facets).length === 0) {
-          container.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No filters available</p>";
-          return;
-        }
-
-        container.innerHTML = Object.entries(facets)
-          .map(
-            ([key, options]) => `
-                <div class="facet-group" data-key="${key}">
-                    <div class="facet-title" onclick="toggleFacetGroup('${key}')">
-                        ${escapeHtml(formatFacetKey(key))}
-                    </div>
-                    <div class="facet-content">
-                        ${options
-                          .slice(0, key === "price_range" ? 20 : 10)
-                          .map(
-                            (option) => `
-                            <div class="facet-item" ${
-                              key === "price_range"
-                                ? 'class="price-range-facet"'
-                                : ""
-                            }>
-                                <input 
-                                    type="checkbox" 
-                                    class="facet-checkbox" 
-                                    id="facet_${key}_${option.value}"
-                                    value="${escapeHtml(option.value)}"
-                                    ${
-                                      isFacetSelected(key, option.value)
-                                        ? "checked"
-                                        : ""
-                                    }
-                                    onchange="toggleFacet('${key}', '${escapeHtml(
-                              option.value
-                            )}')"
-                                />
-                                <label for="facet_${key}_${option.value}" class="facet-label">
-                                    ${escapeHtml(option.display_name)}
-                                </label>
-                                ${
-                                  key === "price_range"
-                                    ? ""
-                                    : `<span class="facet-count">${option.count}</span>`
-                                }
-                            </div>
-                        `
-                          )
-                          .join("")}
-                        ${
-                          options.length > 10
-                            ? `<div class="facet-item"><em style="color: var(--text-muted);">... and ${
-                                options.length - 10
-                              } more</em></div>`
-                            : ""
-                        }
-                    </div>
-                </div>
-            `
-          )
-          .join("");
-        
-        // Initialize facet groups after they're added to DOM
-        setTimeout(initFacetGroups, 100);
-      }
-
-      function displayTiming(timing) {
-        const element = document.getElementById("timingInfo");
-        if (timing) {
-          element.innerHTML = `Search completed in ${timing.total_ms.toFixed(
-            2
-          )}ms (embed: ${timing.embed_ms.toFixed(
-            2
-          )}ms, faiss: ${timing.faiss_ms.toFixed(
-            2
-          )}ms, rerank: ${timing.rerank_ms.toFixed(2)}ms)`;
-        } else {
-          element.innerHTML = "";
-        }
-      }
-
-      function toggleFacet(key, value) {
-        if (!currentFacets[key]) {
-          currentFacets[key] = [];
-        }
-
-        const index = currentFacets[key].indexOf(value);
-        if (index > -1) {
-          currentFacets[key].splice(index, 1);
-        } else {
-          currentFacets[key].push(value);
-        }
-
-        // Remove empty arrays
-        if (currentFacets[key].length === 0) {
-          delete currentFacets[key];
-        }
-
-        // Re-search with new facets
-        searchWithFacets();
-      }
-
-      function isFacetSelected(key, value) {
-        return currentFacets[key] && currentFacets[key].includes(value);
       }
     </script>
   </body>
