@@ -7,6 +7,9 @@ from pathlib import Path
 from rich import print as rprint
 from rich.table import Table
 from rich.panel import Panel
+from typing import Set
+
+import jellyfish
 
 # Ensure src/ is on sys.path for local execution without installation
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +18,26 @@ if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
 from badho_search.hybrid_search import HybridSearchEngine
+from badho_search.config import PHONETIC_CODE_MAX_EDITS, PHONETIC_APPROX_BOOST
+
+
+def query_phonetic_codes(text: str) -> Set[str]:
+    codes: Set[str] = set()
+    has_double = hasattr(jellyfish, "double_metaphone")
+    for token in text.strip().split():
+        if not token:
+            continue
+        if has_double:
+            p, a = jellyfish.double_metaphone(token)
+            if p:
+                codes.add(p.upper())
+            if a:
+                codes.add(a.upper())
+        else:
+            code = jellyfish.metaphone(token)
+            if code:
+                codes.add(code.upper())
+    return codes
 
 
 def main() -> None:
@@ -25,6 +48,10 @@ def main() -> None:
     parser.add_argument("--boost", type=float, default=0.2, help="Phonetic boost (subtract from distance)")
     parser.add_argument("--profile", action="store_true", help="Print timing breakdown")
     args = parser.parse_args()
+
+    # Show phonetic codes and tolerance info for transparency
+    codes = sorted(query_phonetic_codes(args.query))
+    rprint(Panel(f"phonetic codes={codes}\nmax_edits={PHONETIC_CODE_MAX_EDITS} | approx_boost={PHONETIC_APPROX_BOOST}", title="phonetics", title_align="left", border_style="dim"))
 
     engine = HybridSearchEngine()
     results, timing = engine.hybrid_search(

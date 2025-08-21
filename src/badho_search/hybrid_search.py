@@ -4,7 +4,7 @@ import json
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Sequence
+from typing import List
 
 import faiss  # type: ignore
 import jellyfish
@@ -16,6 +16,10 @@ from .config import (
     DEFAULT_PHONETIC_BOOST,
     INDEX_PATH,
     LOOKUP_PATH,
+    PRODUCT_PHONETIC_BOOST,
+    FUZZY_JARO_WEIGHT,
+    PHONETIC_CODE_MAX_EDITS,
+    PHONETIC_APPROX_BOOST,
 )
 from .embeddings import embed_text
 
@@ -72,18 +76,72 @@ class HybridSearchEngine:
         distances, indices = self.index.search(qvec.reshape(1, -1), nprobe)
         t2 = time.perf_counter()
 
+        # Fuzzy similarity of product label to query using Jaro-Winkler (fast, vector-free)
+        # Compute once to reuse
+        def fuzzy_score(s: str) -> float:
+            # Higher is closer (0..1)
+            try:
+                return float(jellyfish.jaro_winkler_similarity(query.lower(), s.lower()))
+            except Exception:
+                return 0.0
+
+        def approx_code_match(record_code: str, qcodes: set[str]) -> bool:
+            if not record_code:
+                return False
+            code_up = record_code.upper()
+            # exact
+            if code_up in qcodes:
+                return True
+            # tolerant edit distance
+            try:
+                for qc in qcodes:
+                    if jellyfish.levenshtein_distance(code_up, qc) <= int(PHONETIC_CODE_MAX_EDITS):
+                        return True
+            except Exception:
+                return False
+            return False
+
         ranked_results: List[tuple[float, dict]] = []
         for dist, idx in zip(distances[0].tolist(), indices[0].tolist()):
             if idx < 0:
                 continue
             metadata = self.product_lookup[idx]
-            code = metadata.get("brand_phonetic", "").upper()
+
+            # Start with semantic distance
             final_score = float(dist)
-            if code and code in query_codes:
-                final_score = final_score - float(phonetic_boost)
+
+            # Brand phonetic boost (consider primary and alternate)
+            brand_codes = {
+                str(metadata.get("brand_phonetic", "")).upper(),
+                str(metadata.get("brand_phonetic_alt", "")).upper(),
+            } - {""}
+            # exact strong boost
+            if brand_codes & query_codes:
+                final_score -= float(phonetic_boost)
+            else:
+                # approximate small boost
+                if any(approx_code_match(c, query_codes) for c in brand_codes):
+                    final_score -= float(PHONETIC_APPROX_BOOST)
+
+            # Product phonetic boost (consider primary and alternate)
+            product_codes = {
+                str(metadata.get("product_phonetic", "")).upper(),
+                str(metadata.get("product_phonetic_alt", "")).upper(),
+            } - {""}
+            if product_codes & query_codes:
+                final_score -= float(PRODUCT_PHONETIC_BOOST)
+            else:
+                if any(approx_code_match(c, query_codes) for c in product_codes):
+                    final_score -= float(PHONETIC_APPROX_BOOST)
+
+            # Fuzzy string similarity of product label to the query
+            label = str(metadata.get("label", ""))
+            jw = fuzzy_score(label)
+            if jw > 0:
+                final_score -= float(FUZZY_JARO_WEIGHT) * jw
+
             ranked_results.append((final_score, metadata))
 
-        # Sort by final_score ascending (smaller L2 distance is better)
         ranked_results.sort(key=lambda x: x[0])
         results: List[dict] = []
         for score, meta in ranked_results[:k]:

@@ -17,6 +17,7 @@ from .config import (
     INDEX_PATH,
     LOOKUP_PATH,
     META_PATH,
+    VOCAB_PATH,
 )
 from .embeddings import embed_texts_parallel
 
@@ -54,29 +55,48 @@ def _prepare_dataframe(csv_path: Path, max_rows: int | None = None) -> pd.DataFr
 
     has_double = hasattr(jellyfish, "double_metaphone")
 
-    def brand_phonetic(brand: str) -> str:
+    def dmeta_or_meta_both(text: str) -> tuple[str, str]:
         if has_double:
-            code_primary, code_alt = jellyfish.double_metaphone(brand)
-            return (code_primary or code_alt or "").upper()
-        return (jellyfish.metaphone(brand) or "").upper()
+            p, a = jellyfish.double_metaphone(text)
+            return ((p or "").upper(), (a or "").upper())
+        code = (jellyfish.metaphone(text) or "").upper()
+        return (code, "")
 
-    df["brand_phonetic"] = df["brand_name"].map(brand_phonetic)
+    # Brand and product phonetics (store primary and alternate)
+    brand_codes = df["brand_name"].map(dmeta_or_meta_both)
+    product_codes = df["product_name"].map(dmeta_or_meta_both)
+
+    df["brand_phonetic_primary"], df["brand_phonetic_alt"] = zip(*brand_codes)
+    df["product_phonetic_primary"], df["product_phonetic_alt"] = zip(*product_codes)
+
+    # Back-compat single-code fields (primary)
+    df["brand_phonetic"] = df["brand_phonetic_primary"]
+    df["product_phonetic"] = df["product_phonetic_primary"]
 
     return df
 
 
 def _build_lookup(df: pd.DataFrame) -> List[dict]:
     records: List[dict] = []
-    for row in df[["product_name", "brand_name", "category_name", "brand_phonetic"]].itertuples(
-        index=False
-    ):
-        product_name, brand_name, category_name, brand_phonetic = row
+    for row in df[[
+        "product_name",
+        "brand_name",
+        "category_name",
+        "brand_phonetic",
+        "product_phonetic",
+        "brand_phonetic_alt",
+        "product_phonetic_alt",
+    ]].itertuples(index=False):
+        product_name, brand_name, category_name, brand_phonetic, product_phonetic, brand_phonetic_alt, product_phonetic_alt = row
         records.append(
             {
                 "label": str(product_name).strip(),
                 "brandLabel": str(brand_name).strip(),
                 "category": str(category_name).strip(),
                 "brand_phonetic": str(brand_phonetic).strip(),
+                "product_phonetic": str(product_phonetic).strip(),
+                "brand_phonetic_alt": str(brand_phonetic_alt).strip(),
+                "product_phonetic_alt": str(product_phonetic_alt).strip(),
             }
         )
     return records
@@ -91,7 +111,6 @@ def build_index(csv_path: Path | None = None, max_rows: int | None = None, worke
 
     texts: List[str] = df["search_text"].tolist()
 
-    # Progress bar for embeddings
     progress = Progress(
         TextColumn("[bold blue]Embeddings"),
         BarColumn(),
@@ -119,6 +138,16 @@ def build_index(csv_path: Path | None = None, max_rows: int | None = None, worke
     product_lookup: List[dict] = _build_lookup(df)
     with open(LOOKUP_PATH, "w", encoding="utf-8") as f:
         json.dump(product_lookup, f, ensure_ascii=False)
+
+    # Persist a tiny phonetic vocabulary from all codes (primary and alternate)
+    vocab = sorted({
+        *(rec.get("brand_phonetic", "") for rec in product_lookup),
+        *(rec.get("product_phonetic", "") for rec in product_lookup),
+        *(rec.get("brand_phonetic_alt", "") for rec in product_lookup),
+        *(rec.get("product_phonetic_alt", "") for rec in product_lookup),
+    })
+    with open(VOCAB_PATH, "w", encoding="utf-8") as f:
+        json.dump([v for v in vocab if v], f)
 
     with open(META_PATH, "w", encoding="utf-8") as f:
         json.dump(
