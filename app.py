@@ -118,23 +118,29 @@ class SearchFacetSystem:
             }
     
     def _process_facets_for_ui(self, facets: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[Dict[str, Any]]]:
-        """Process facets for UI display - group by standard_key and count occurrences"""
+        """Process facets for UI display - prioritize by price_range first, then by total product count"""
         processed = {}
+        facet_totals = {}
         
+        # First pass: process facets and calculate totals
         for standard_key, facet_items in facets.items():
             if standard_key == 'price_range':
                 # Handle price range facets specially
                 facet_options = []
+                total_products = 0
                 for item in facet_items:
+                    count = item['count']
+                    total_products += count
                     facet_options.append({
                         'value': item['facet_value'],
-                        'count': item['count'],
-                        'display_name': f"{item['facet_value']} ({item['count']})",
+                        'count': count,
+                        'display_name': f"{item['facet_value']} ({count})",
                         'min_price': item.get('min_price'),
                         'max_price': item.get('max_price')
                     })
                 # Sort price ranges by min_price
                 facet_options.sort(key=lambda x: x.get('min_price', 0))
+                facet_totals[standard_key] = total_products
             else:
                 # Count occurrences of each facet value for regular facets
                 value_counts = {}
@@ -146,19 +152,32 @@ class SearchFacetSystem:
                 
                 # Create list of facet options with counts
                 facet_options = []
+                total_products = 0
                 for value, count in value_counts.items():
                     facet_options.append({
                         'value': value,
                         'count': count,
                         'display_name': value
                     })
+                    total_products += count
                 
                 # Sort by count descending
                 facet_options.sort(key=lambda x: x['count'], reverse=True)
+                facet_totals[standard_key] = total_products
             
             processed[standard_key] = facet_options
         
-        return processed
+        # Sort facets by priority: price_range first, then by total product count descending
+        def facet_sort_key(item):
+            key, _ = item
+            if key == 'price_range':
+                return (0, 0)  # Highest priority (price_range always first)
+            else:
+                return (1, -facet_totals.get(key, 0))  # Lower priority, then by total count desc
+        
+        # Return ordered dictionary with sorted facets
+        sorted_facets = sorted(processed.items(), key=facet_sort_key)
+        return dict(sorted_facets)
     
     def _enhance_results_with_brand_info(self, results: List[Dict[str, Any]], brand_sku_mapping: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
         """Enhance search results with brand information"""
