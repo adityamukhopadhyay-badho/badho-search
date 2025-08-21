@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # Database connection string
 CONNECTION_STRING = "postgres://postgres:Badho_1301@db.badho.in:5432/badho-app"
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__)
 
 # Initialize search engine and database
 search_engine = HybridSearchEngine()
@@ -210,15 +210,6 @@ def search():
 def health():
     """Health check endpoint"""
     return jsonify({'status': 'healthy'})
-
-@app.route('/test-logo')
-def test_logo():
-    """Test endpoint to verify logo is accessible"""
-    return jsonify({
-        'logo_path': '/static/badho_logo.jpg',
-        'static_folder': app.static_folder,
-        'logo_exists': Path(app.static_folder, 'badho_logo.jpg').exists()
-    })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

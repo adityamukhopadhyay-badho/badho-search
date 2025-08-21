@@ -64,35 +64,6 @@
         position: relative;
       }
 
-      .logo-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-        margin-bottom: 20px;
-      }
-
-      .logo {
-        height: 60px;
-        width: auto;
-        filter: drop-shadow(0 4px 8px rgba(111, 45, 168, 0.2));
-      }
-
-      .fallback-logo {
-        display: none;
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, var(--accent-color), var(--accent-gold));
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        font-weight: bold;
-        color: white;
-        box-shadow: var(--shadow);
-      }
-
       .header h1 {
         margin: 0 0 8px 0;
         font-size: 2.5rem;
@@ -465,28 +436,15 @@
         .product-grid {
           grid-template-columns: 1fr;
         }
-
-        .logo-container {
-          flex-direction: column;
-          gap: 15px;
-        }
-
-        .logo {
-          height: 50px;
-        }
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header">
-        <div class="logo-container">
-          <img src="/static/badho_logo.jpg" alt="Badho Logo" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="fallback-logo">B</div>
-          <div>
-            <h1>Badho Search</h1>
-            <p>Hybrid search powered by FAISS + PostgreSQL facets</p>
-          </div>
+        <div>
+          <h1>Badho Search</h1>
+          <p>Hybrid search powered by FAISS + PostgreSQL facets</p>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
           🌙
@@ -572,26 +530,6 @@
 
       // Initialize theme on page load
       initTheme();
-
-      // Handle logo loading
-      function initLogo() {
-        const logo = document.querySelector('.logo');
-        const fallback = document.querySelector('.fallback-logo');
-        
-        if (logo && fallback) {
-          logo.addEventListener('load', function() {
-            fallback.style.display = 'none';
-          });
-          
-          logo.addEventListener('error', function() {
-            logo.style.display = 'none';
-            fallback.style.display = 'flex';
-          });
-        }
-      }
-
-      // Initialize logo on page load
-      initLogo();
 
       function handleKeyPress(event) {
         if (event.key === "Enter") {
