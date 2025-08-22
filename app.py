@@ -52,7 +52,7 @@ class SearchFacetSystem:
                 return {
                     'results': [],
                     'facets': {},
-                    'timing': timing,
+                    'timing': self._timing_to_dict(timing),
                     'total_results': 0
                 }
             
@@ -94,7 +94,7 @@ class SearchFacetSystem:
             # Step 6: Get facets for all brandSKU IDs (show all possible facets from search results)
             facets = self.product_db.get_facets_by_brand_sku_ids(brand_sku_ids, only_active_facets)
             
-            # Step 7: Process facets for UI display
+            # Step 7: Process facets for UI display with proper ordering
             processed_facets = self._process_facets_for_ui(facets)
             
             # Step 8: Enhance results with brand information
@@ -103,7 +103,7 @@ class SearchFacetSystem:
             return {
                 'results': enhanced_results,
                 'facets': processed_facets,
-                'timing': timing,
+                'timing': self._timing_to_dict(timing),
                 'total_results': len(enhanced_results)
             }
             
@@ -116,6 +116,17 @@ class SearchFacetSystem:
                 'total_results': 0,
                 'error': str(e)
             }
+    
+    def _timing_to_dict(self, timing):
+        """Convert timing object to dictionary for JSON serialization"""
+        if timing is None:
+            return None
+        return {
+            'total_ms': getattr(timing, 'total_ms', 0),
+            'embed_ms': getattr(timing, 'embed_ms', 0),
+            'faiss_ms': getattr(timing, 'faiss_ms', 0),
+            'rerank_ms': getattr(timing, 'rerank_ms', 0)
+        }
     
     def _process_facets_for_ui(self, facets: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[Dict[str, Any]]]:
         """Process facets for UI display - prioritize by price_range first, then by total product count"""
@@ -167,17 +178,29 @@ class SearchFacetSystem:
             
             processed[standard_key] = facet_options
         
-        # Sort facets by priority: price_range first, then by total product count descending
-        def facet_sort_key(item):
-            key, _ = item
-            if key == 'price_range':
-                return (0, 0)  # Highest priority (price_range always first)
-            else:
-                return (1, -facet_totals.get(key, 0))  # Lower priority, then by total count desc
+        # EXPLICIT ORDERING: Build result with price_range first
+        ordered_result = {}
         
-        # Return ordered dictionary with sorted facets
-        sorted_facets = sorted(processed.items(), key=facet_sort_key)
-        return dict(sorted_facets)
+        # Step 1: Add price_range first if it exists
+        if 'price_range' in processed:
+            ordered_result['price_range'] = processed['price_range']
+            logger.info("Added price_range as first facet")
+        
+        # Step 2: Add other facets sorted by total product count (descending)
+        other_facets = []
+        for key, value in processed.items():
+            if key != 'price_range':
+                other_facets.append((key, value, facet_totals.get(key, 0)))
+        
+        # Sort by total count descending
+        other_facets.sort(key=lambda x: x[2], reverse=True)
+        
+        # Add to ordered result
+        for key, value, _ in other_facets:
+            ordered_result[key] = value
+        
+        logger.info(f"Final facet order: {list(ordered_result.keys())[:5]}...")
+        return ordered_result
     
     def _enhance_results_with_brand_info(self, results: List[Dict[str, Any]], brand_sku_mapping: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
         """Enhance search results with brand information"""
@@ -238,6 +261,7 @@ def search():
     # Perform search with facets
     search_results = search_system.search_with_facets(query, facet_filters, k, only_active_facets)
     
+    # Use Flask's jsonify which handles serialization properly
     return jsonify(search_results)
 
 @app.route('/health')
