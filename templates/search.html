@@ -207,6 +207,21 @@
         );
       }
 
+      .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-top: 2px solid var(--accent-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
       .main-content {
         display: flex;
         gap: 30px;
@@ -674,14 +689,81 @@
               return;
             }
 
+            // Display search results immediately
             displayResults(data.results, data.total_results);
-            displayFacets(data.facets);
             displayTiming(data.timing);
+
+            // Check if facets need to be loaded
+            if (data.facets_loading && data.product_names && data.product_names.length > 0) {
+              // Show facets loading state
+              showFacetsLoading(true);
+              
+              // Load facets asynchronously
+              loadFacetsAsync(data.product_names, data.facet_filters, data.only_active_facets);
+            }
           })
           .catch((error) => {
             showLoading(false);
             showError("Search failed: " + error.message);
           });
+      }
+
+      function loadFacetsAsync(productNames, facetFilters, onlyActiveFacets) {
+        // Build query parameters for facets
+        const params = new URLSearchParams();
+        
+        // Add product names
+        for (const productName of productNames) {
+          params.append("products", productName);
+        }
+        
+        // Add active facets parameter
+        if (onlyActiveFacets) {
+          params.append("active_facets", "true");
+        }
+        
+        // Add facet filters
+        for (const [key, values] of Object.entries(facetFilters)) {
+          if (values && values.length > 0) {
+            for (const value of values) {
+              params.append(`facet_${key}`, value);
+            }
+          }
+        }
+
+        // Fetch facets asynchronously
+        fetch(`/facets?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            showFacetsLoading(false);
+            
+            if (data.error) {
+              console.error("Facets loading failed:", data.error);
+              return;
+            }
+
+            // Display facets once loaded
+            if (data.facets_complete) {
+              displayFacets(data.facets);
+            }
+          })
+          .catch((error) => {
+            showFacetsLoading(false);
+            console.error("Facets loading failed:", error);
+          });
+      }
+
+      function showFacetsLoading(show) {
+        const container = document.getElementById("facetsContainer");
+        
+        if (show) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+              <div style="margin-bottom: 10px;">Loading filters...</div>
+              <div class="loading-spinner"></div>
+            </div>
+          `;
+        }
       }
 
       function displayResults(results, totalResults) {
@@ -727,7 +809,7 @@
 
         if (!facets || Object.keys(facets).length === 0) {
           container.innerHTML =
-            "<p style='color: var(--text-muted); font-style: italic;'>No filters available</p>";
+            "<p style='color: var(--text-muted); font-style: italic'>No filters available</p>";
           return;
         }
 
