@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: badho-ollama-prod
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - badho-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+
+  badho-search:
+    build: .
+    container_name: badho-search-prod
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - PYTHONPATH=/app/src
+      - CONNECTION_STRING=${CONNECTION_STRING:-postgres://postgres:Badho_1301@db.badho.in:5432/badho-app}
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - ./artifacts:/app/artifacts:ro
+      - ./templates:/app/templates:ro
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - badho-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+networks:
+  badho-network:
+    driver: bridge
+
+volumes:
+  ollama_data: 
