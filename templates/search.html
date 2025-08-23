@@ -694,12 +694,12 @@
             displayTiming(data.timing);
 
             // Check if facets need to be loaded
-            if (data.facets_loading && data.product_names && data.product_names.length > 0) {
+            if (data.facets_loading && data.brand_sku_ids && data.brand_sku_ids.length > 0) {
               // Show facets loading state
               showFacetsLoading(true);
               
-              // Load facets asynchronously
-              loadFacetsAsync(data.product_names, data.facet_filters, data.only_active_facets);
+              // Load facets asynchronously using brand_sku_ids
+              loadFacetsAsync(data.brand_sku_ids, data.facet_filters, data.only_active_facets);
             }
           })
           .catch((error) => {
@@ -708,13 +708,13 @@
           });
       }
 
-      function loadFacetsAsync(productNames, facetFilters, onlyActiveFacets) {
-        // Build query parameters for facets
+      function loadFacetsAsync(brandSkuIds, facetFilters, onlyActiveFacets) {
+        // Build query parameters for facets using brand_sku_ids
         const params = new URLSearchParams();
         
-        // Add product names
-        for (const productName of productNames) {
-          params.append("products", productName);
+        // Add brand_sku_ids
+        for (const brandSkuId of brandSkuIds) {
+          params.append("brand_sku_ids", brandSkuId);
         }
         
         // Add active facets parameter
@@ -731,7 +731,7 @@
           }
         }
 
-        // Fetch facets asynchronously
+        // Fetch facets asynchronously using the new endpoint
         fetch(`/facets?${params.toString()}`)
           .then((response) => response.json())
           .then((data) => {

@@ -64,54 +64,34 @@ class SearchFacetSystem:
                     'facets_loading': False
                 }
             
-            # Step 2: Extract product names from search results
-            product_names = [item.get('label', '') for item in results if item.get('label')]
+            # Step 2: Extract brand_sku_ids directly from search results (much faster!)
+            brand_sku_ids = [item.get('id', '') for item in results if item.get('id')]
             
             # Step 3: Apply facet filters if provided (synchronous for immediate filtering)
             filtered_results = results
-            if facet_filters and product_names:
-                # Get brandSKU information for filtering
-                brand_sku_mapping = self.product_db.get_brand_sku_by_product_names(product_names)
+            if facet_filters and brand_sku_ids:
+                # Get products that match the facet filters directly by ID
+                filtered_brand_sku_ids = self.product_db.get_brand_skus_matching_facets(facet_filters, brand_sku_ids)
                 
-                if brand_sku_mapping:
-                    # Get all brand SKU IDs that match the search results
-                    all_brand_sku_ids = []
-                    for product_name, brand_skus in brand_sku_mapping.items():
-                        for brand_sku in brand_skus:
-                            all_brand_sku_ids.append(brand_sku['brand_sku_id'])
-                    
-                    if all_brand_sku_ids:
-                        # Get products that match the facet filters
-                        filtered_brand_sku_ids = self.product_db.get_brand_skus_matching_facets(facet_filters, all_brand_sku_ids)
-                        
-                        # Filter search results
-                        filtered_results = []
-                        for result in results:
-                            product_name = result.get('label', '')
-                            if product_name in brand_sku_mapping:
-                                for brand_sku in brand_sku_mapping[product_name]:
-                                    if brand_sku['brand_sku_id'] in filtered_brand_sku_ids:
-                                        filtered_results.append(result)
-                                        break
-                        
-                        # Enhance results with brand information
-                        enhanced_results = self._enhance_results_with_brand_info(filtered_results, brand_sku_mapping)
-                    else:
-                        enhanced_results = filtered_results
+                if filtered_brand_sku_ids:
+                    # Filter search results to only include products whose brand SKUs match the facet criteria
+                    filtered_results = []
+                    for result in results:
+                        if result.get('id') in filtered_brand_sku_ids:
+                            filtered_results.append(result)
                 else:
-                    enhanced_results = filtered_results
-            else:
-                enhanced_results = filtered_results
+                    # No results match the filters
+                    filtered_results = []
             
             # Return search results immediately
             return {
-                'results': enhanced_results,
+                'results': filtered_results,
                 'facets': {},  # Empty initially, will be loaded separately
                 'timing': self._timing_to_dict(timing),
-                'total_results': len(enhanced_results),
+                'total_results': len(filtered_results),
                 'search_complete': True,
                 'facets_loading': True,
-                'product_names': product_names,  # For facet loading
+                'brand_sku_ids': brand_sku_ids,  # For facet loading - now using IDs directly
                 'facet_filters': facet_filters or {},
                 'only_active_facets': only_active_facets
             }
@@ -128,34 +108,21 @@ class SearchFacetSystem:
                 'facets_loading': False
             }
     
-    def get_facets_async(self, product_names: List[str], facet_filters: Dict[str, List[str]] = None, only_active_facets: bool = False) -> Dict[str, Any]:
-        """Get facets asynchronously for the given product names"""
+    def get_facets_async(self, brand_sku_ids: List[str], facet_filters: Dict[str, List[str]] = None, only_active_facets: bool = False) -> Dict[str, Any]:
+        """Get facets asynchronously for the given brand_sku_ids - now using direct ID lookup for much faster performance"""
         try:
-            if not product_names:
+            if not brand_sku_ids:
                 return {'facets': {}, 'facets_complete': True}
             
-            # Get brandSKU information for all results
-            brand_sku_mapping = self.product_db.get_brand_sku_by_product_names(product_names)
-            
-            if not brand_sku_mapping:
-                return {'facets': {}, 'facets_complete': True}
-            
-            # Collect all brandSKU IDs for facet generation
-            brand_sku_ids = []
-            for product_name, brand_skus in brand_sku_mapping.items():
-                for brand_sku in brand_skus:
-                    brand_sku_ids.append(brand_sku['brand_sku_id'])
-            
-            # Get facets for all brandSKU IDs
-            facets = self.product_db.get_facets_by_brand_sku_ids(brand_sku_ids, only_active_facets)
+            # Get facets directly by brand_sku_ids - no more label matching needed!
+            facets = self.product_db.get_facets_direct_by_ids(brand_sku_ids, only_active_facets)
             
             # Process facets for UI display
             processed_facets = self._process_facets_for_ui(facets)
             
             return {
                 'facets': processed_facets,
-                'facets_complete': True,
-                'brand_sku_mapping': brand_sku_mapping
+                'facets_complete': True
             }
             
         except Exception as e:
@@ -250,29 +217,6 @@ class SearchFacetSystem:
         
         logger.info(f"Final facet order: {list(ordered_result.keys())[:5]}...")
         return ordered_result
-    
-    def _enhance_results_with_brand_info(self, results: List[Dict[str, Any]], brand_sku_mapping: Dict[str, List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
-        """Enhance search results with brand information"""
-        enhanced = []
-        
-        for result in results:
-            product_name = result.get('label', '')
-            enhanced_result = result.copy()
-            
-            # Add brand information if available
-            if product_name in brand_sku_mapping:
-                brand_skus = brand_sku_mapping[product_name]
-                if brand_skus:
-                    # Take the first brand SKU (you might want to handle multiple differently)
-                    first_brand_sku = brand_skus[0]
-                    enhanced_result['brand_sku_id'] = first_brand_sku['brand_sku_id']
-                    enhanced_result['brand_sku_label'] = first_brand_sku['brand_sku_label']
-                    enhanced_result['brand_name'] = first_brand_sku['brand_name']
-                    enhanced_result['brand_id'] = first_brand_sku['brand_id']
-            
-            enhanced.append(enhanced_result)
-        
-        return enhanced
 
 # Initialize the search system
 search_system = SearchFacetSystem(search_engine, product_db)
@@ -317,8 +261,8 @@ def search():
 
 @app.route('/facets')
 def get_facets():
-    """API endpoint for fetching facets asynchronously"""
-    product_names = request.args.getlist('products')
+    """API endpoint for fetching facets asynchronously - now using brand_sku_ids for much faster performance"""
+    brand_sku_ids = request.args.getlist('brand_sku_ids')
     only_active_facets = request.args.get('active_facets', 'false').lower() == 'true'
     
     # Parse facet filters from query parameters
@@ -330,15 +274,15 @@ def get_facets():
             if values:
                 facet_filters[facet_key] = [v for v in values if v.strip()]
     
-    if not product_names:
+    if not brand_sku_ids:
         return jsonify({
             'facets': {},
             'facets_complete': False,
-            'error': 'No product names provided'
+            'error': 'No brand_sku_ids provided'
         })
     
-    # Get facets asynchronously
-    facets_result = search_system.get_facets_async(product_names, facet_filters, only_active_facets)
+    # Get facets asynchronously using the new ID-based approach
+    facets_result = search_system.get_facets_async(brand_sku_ids, facet_filters, only_active_facets)
     
     return jsonify(facets_result)
 

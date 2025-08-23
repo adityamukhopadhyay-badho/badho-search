@@ -31,8 +31,8 @@ def _prepare_dataframe(csv_path: Path, max_rows: int | None = None) -> pd.DataFr
     df = pd.read_csv(csv_path)
     if max_rows is not None and max_rows > 0:
         df = df.head(max_rows)
-    # Expected columns: product_name, brand_name, category_name
-    required = {"product_name", "brand_name", "category_name"}
+    # Expected columns: brand_sku_id, product_name, brand_name, category_name
+    required = {"brand_sku_id", "product_name", "brand_name", "category_name"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"CSV missing required columns: {sorted(missing)}")
@@ -40,6 +40,8 @@ def _prepare_dataframe(csv_path: Path, max_rows: int | None = None) -> pd.DataFr
     def safe_lower(x: str) -> str:
         return str(x).strip().lower()
 
+    # Ensure brand_sku_id is string type for consistency
+    df["brand_sku_id"] = df["brand_sku_id"].astype(str)
     df["product_name"] = df["product_name"].astype(str).map(safe_lower)
     df["brand_name"] = df["brand_name"].astype(str).map(safe_lower)
     df["category_name"] = df["category_name"].astype(str).map(safe_lower)
@@ -67,12 +69,13 @@ def _prepare_dataframe(csv_path: Path, max_rows: int | None = None) -> pd.DataFr
 
 def _build_lookup(df: pd.DataFrame) -> List[dict]:
     records: List[dict] = []
-    for row in df[["product_name", "brand_name", "category_name", "brand_phonetic"]].itertuples(
+    for row in df[["brand_sku_id", "product_name", "brand_name", "category_name", "brand_phonetic"]].itertuples(
         index=False
     ):
-        product_name, brand_name, category_name, brand_phonetic = row
+        brand_sku_id, product_name, brand_name, category_name, brand_phonetic = row
         records.append(
             {
+                "id": str(brand_sku_id).strip(),  # This is the brand_sku_id
                 "label": str(product_name).strip(),
                 "brandLabel": str(brand_name).strip(),
                 "category": str(category_name).strip(),
