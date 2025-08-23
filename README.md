@@ -40,6 +40,25 @@ python scripts/search_cli.py --query "amul butter" --k 5 --pool 50 --boost 0.2 -
 
 The `--profile` flag prints step timings (embedding, FAISS search, rerank) to help tune latency.
 
+### 4) Docker Deployment 🐳
+For production deployment, use Docker and Docker Compose:
+
+```bash
+# Quick start
+./deploy.sh dev      # Development environment
+./deploy.sh prod     # Production environment
+
+# Manual deployment
+docker-compose up --build -d
+```
+
+**Note**: In Docker, the search app connects to Ollama at `http://ollama:11434` (internal Docker network), while Ollama is accessible externally at `http://localhost:11434`.
+
+See [DOCKER_README.md](DOCKER_README.md) for detailed Docker deployment instructions.
+See [NETWORKING.md](NETWORKING.md) for Docker networking architecture explanation.
+
 ### Notes
 - FAISS build time is zero with `IndexFlatL2`; only embedding time dominates offline build.
-- Real-time path includes one embedding call to Ollama; the localhost API latency is often the main contributor. Tune candidate pool size and boost as needed. 
+- Real-time path includes one embedding call to Ollama; the localhost API latency is often the main contributor. Tune candidate pool size and boost as needed.
+- **Local Development**: Ollama at `http://localhost:11434`
+- **Docker Deployment**: Search app connects to `http://ollama:11434` (internal), Ollama accessible at `http://localhost:11434` (external)

@@ -32,6 +32,8 @@ coverage.xml
 # OS-generated files
 .DS_Store
 Icon?
+Thumbs.db
+*.tmp
 
 # Notebooks
 .ipynb_checkpoints/
@@ -44,6 +46,28 @@ Icon?
 # Local environment files
 .env
 .env.*
+!.env.example
 
 # Project artifacts (generated)
 artifacts/
+
+# Temporary files
+temp/
+tmp/
+
+# Docker
+.dockerignore
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Local configuration
+config.local.py
+settings.local.py
