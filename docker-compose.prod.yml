@@ -26,11 +26,11 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - FLASK_ENV=production
-      - FLASK_DEBUG=0
-      - PYTHONPATH=/app/src
-      - CONNECTION_STRING=${CONNECTION_STRING:-postgres://postgres:Badho_1301@db.badho.in:5432/badho-app}
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - FLASK_DEBUG=${FLASK_DEBUG:-0}
+      - PYTHONPATH=${PYTHONPATH:-/app/src}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - CONNECTION_STRING=${CONNECTION_STRING}
     volumes:
       - ./artifacts:/app/artifacts:ro
       - ./templates:/app/templates:ro
