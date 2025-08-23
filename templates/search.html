@@ -209,88 +209,82 @@
 
       .main-content {
         display: flex;
-        gap: 16px;
+        gap: 30px;
       }
 
       .facets-sidebar {
-        width: 240px;
+        width: 280px;
         background: var(--bg-secondary);
-        padding: 12px;
-        border-radius: var(--radius-sm);
+        padding: 24px;
+        border-radius: var(--radius-lg);
         box-shadow: var(--shadow);
         height: fit-content;
         border: 1px solid var(--border-color);
       }
 
       .facets-sidebar h3 {
-        margin: 0 0 8px 0;
+        margin: 0 0 20px 0;
         color: var(--text-primary);
-        font-size: 0.8rem;
+        font-size: 1.2rem;
         font-weight: 600;
       }
 
       .facet-group {
-        margin-bottom: 12px;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 8px;
-      }
-
-      .facet-group:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
+        margin-bottom: 16px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        overflow: hidden;
       }
 
       .facet-title {
         font-weight: 600;
-        margin-bottom: 6px;
-        padding-bottom: 3px;
-        border-bottom: 1px solid var(--accent-color);
+        margin: 0;
+        padding: 12px 16px;
+        background: var(--bg-tertiary);
         color: var(--text-primary);
-        font-size: 0.7rem;
+        font-size: 0.9rem;
         text-transform: uppercase;
-        letter-spacing: 0.1px;
+        letter-spacing: 0.5px;
         cursor: pointer;
         display: flex;
-        align-items: center;
         justify-content: space-between;
+        align-items: center;
         user-select: none;
+        transition: background-color 0.2s ease;
       }
 
       .facet-title:hover {
-        color: var(--accent-color);
+        background: var(--accent-color);
+        color: white;
       }
 
-      .facet-title::after {
-        content: '▼';
-        font-size: 0.5rem;
-        color: var(--text-muted);
+      .facet-toggle-icon {
+        font-size: 0.8rem;
         transition: transform 0.2s ease;
       }
 
-      .facet-group.collapsed .facet-title::after {
-        transform: rotate(-90deg);
-      }
-
       .facet-content {
-        transition: all 0.3s ease;
-        overflow: hidden;
+        padding: 8px 12px;
+        background: var(--bg-secondary);
+        max-height: 300px;
+        overflow-y: auto;
+        transition: max-height 0.3s ease, padding 0.3s ease;
       }
 
-      .facet-group.collapsed .facet-content {
+      .facet-content.collapsed {
         max-height: 0;
-        opacity: 0;
-        margin-top: 0;
+        padding: 0 12px;
+        overflow: hidden;
       }
 
       .facet-item {
         display: flex;
         align-items: center;
-        margin-bottom: 2px;
-        font-size: 11px;
-        padding: 1px 4px;
-        border-radius: 3px;
+        margin-bottom: 6px;
+        font-size: 13px;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
         transition: background-color 0.2s ease;
-        min-height: 16px;
       }
 
       .facet-item:hover {
@@ -298,71 +292,23 @@
       }
 
       .facet-checkbox {
-        margin-right: 4px;
-        width: 12px;
-        height: 12px;
+        margin-right: 12px;
+        width: 18px;
+        height: 18px;
         accent-color: var(--accent-color);
-        cursor: pointer;
-      }
-
-      .facet-label {
-        flex: 1;
-        cursor: pointer;
-        color: var(--text-secondary);
-        font-size: 11px;
-        line-height: 1.1;
       }
 
       .facet-count {
         margin-left: auto;
         color: var(--text-muted);
-        font-size: 9px;
-        background: var(--bg-tertiary);
-        padding: 1px 3px;
-        border-radius: 4px;
-        font-weight: 400;
-        min-width: 14px;
+        font-size: 11px;
+        background: var(--accent-color);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 8px;
+        font-weight: 500;
+        min-width: 20px;
         text-align: center;
-      }
-
-      .facet-mode-toggle {
-        padding: 3px 6px;
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 3px;
-        cursor: pointer;
-        font-size: 9px;
-        color: var(--text-secondary);
-        transition: all 0.2s ease;
-        font-weight: 500;
-      }
-
-      .facet-mode-toggle:hover {
-        background: var(--accent-color);
-        color: white;
-        border-color: var(--accent-color);
-      }
-
-      .facet-mode-toggle.active {
-        background: var(--accent-color);
-        color: white;
-        border-color: var(--accent-color);
-      }
-
-      .price-range-facet {
-        border-left: 1px solid var(--accent-color);
-        padding-left: 6px;
-        margin-bottom: 2px;
-      }
-
-      .price-range-facet .facet-label {
-        color: var(--accent-color);
-        font-weight: 500;
-      }
-
-      .price-range-facet .facet-count {
-        background: var(--accent-color);
-        color: white;
       }
 
       .results-area {
@@ -591,21 +537,30 @@
               display: flex;
               justify-content: space-between;
               align-items: center;
-              margin-bottom: 6px;
+              margin-bottom: 15px;
             "
           >
             <h3 style="margin: 0">Filters</h3>
             <button
               id="facetModeToggle"
               onclick="toggleFacetMode()"
-              class="facet-mode-toggle"
+              style="
+                padding: 5px 10px;
+                background: #f0f0f0;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+              "
               title="Switch between showing all facets or only active facets"
             >
               All Facets
             </button>
           </div>
           <div id="facetsContainer">
-            <p style="color: var(--text-muted); font-style: italic; font-size: 9px; margin: 0;">Enter a search term to see available filters</p>
+            <p style="color: var(--text-muted); font-style: italic">
+              Enter a search term to see available filters
+            </p>
           </div>
         </div>
 
@@ -771,25 +726,34 @@
         const container = document.getElementById("facetsContainer");
 
         if (!facets || Object.keys(facets).length === 0) {
-          container.innerHTML = "<p style='color: var(--text-muted); font-style: italic; font-size: 9px; margin: 0;'>No filters available</p>";
+          container.innerHTML =
+            "<p style='color: var(--text-muted); font-style: italic;'>No filters available</p>";
           return;
         }
 
-        container.innerHTML = Object.entries(facets)
+        // Sort facets with price_range first, then alphabetically
+        const sortedFacets = Object.entries(facets).sort((a, b) => {
+          if (a[0] === "price_range") return -1;
+          if (b[0] === "price_range") return 1;
+          return a[0].localeCompare(b[0]);
+        });
+
+        container.innerHTML = sortedFacets
           .map(
-            ([key, options]) => `
-                <div class="facet-group" data-key="${key}">
+            ([key, options], index) => `
+                <div class="facet-group">
                     <div class="facet-title" onclick="toggleFacetGroup('${key}')">
                         ${escapeHtml(formatFacetKey(key))}
+                        <span class="facet-toggle-icon" id="icon_${key}">▼</span>
                     </div>
-                    <div class="facet-content">
+                    <div class="facet-content" id="content_${key}">
                         ${options
                           .slice(0, key === "price_range" ? 20 : 10)
                           .map(
                             (option) => `
                             <div class="facet-item" ${
                               key === "price_range"
-                                ? 'class="price-range-facet"'
+                                ? 'style="border-left: 2px solid #0066cc; padding-left: 6px;"'
                                 : ""
                             }>
                                 <input 
@@ -806,8 +770,16 @@
                               option.value
                             )}')"
                                 />
-                                <label for="facet_${key}_${option.value}" class="facet-label">
-                                    ${escapeHtml(option.display_name)}
+                                <label for="facet_${key}_${option.value}" ${
+                              key === "price_range"
+                                ? 'style="font-weight: 500; color: #0066cc;"'
+                                : ""
+                            }>
+                                    ${
+                                      key === "price_range"
+                                        ? escapeHtml(option.display_name)
+                                        : escapeHtml(option.display_name)
+                                    }
                                 </label>
                                 ${
                                   key === "price_range"
@@ -819,9 +791,10 @@
                           )
                           .join("")}
                         ${
-                          options.length > 10
-                            ? `<div class="facet-item"><em style="color: var(--text-muted); font-size: 9px;">... and ${
-                                options.length - 10
+                          options.length > (key === "price_range" ? 20 : 10)
+                            ? `<div class="facet-item"><em style="color: var(--text-muted);">... and ${
+                                options.length -
+                                (key === "price_range" ? 20 : 10)
                               } more</em></div>`
                             : ""
                         }
@@ -830,9 +803,6 @@
             `
           )
           .join("");
-        
-        // Initialize facet groups after they're added to DOM
-        setTimeout(initFacetGroups, 100);
       }
 
       function displayTiming(timing) {
@@ -947,36 +917,18 @@
       }
 
       function toggleFacetGroup(key) {
-        const facetGroup = document.querySelector(`[data-key="${key}"]`);
-        if (!facetGroup) return;
-        
-        const content = facetGroup.querySelector('.facet-content');
-        const title = facetGroup.querySelector('.facet-title');
-        
-        if (facetGroup.classList.contains('collapsed')) {
-          facetGroup.classList.remove('collapsed');
-          content.style.maxHeight = content.scrollHeight + 'px';
-          content.style.opacity = '1';
-          content.style.marginTop = '4px';
-        } else {
-          facetGroup.classList.add('collapsed');
-          content.style.maxHeight = '0';
-          content.style.opacity = '0';
-          content.style.marginTop = '0';
-        }
-      }
+        const content = document.getElementById(`content_${key}`);
+        const icon = document.getElementById(`icon_${key}`);
 
-      // Initialize facets as expanded by default
-      function initFacetGroups() {
-        const facetGroups = document.querySelectorAll('.facet-group');
-        facetGroups.forEach(group => {
-          const content = group.querySelector('.facet-content');
-          if (content) {
-            content.style.maxHeight = content.scrollHeight + 'px';
-            content.style.opacity = '1';
-            content.style.marginTop = '4px';
-          }
-        });
+        if (content.classList.contains("collapsed")) {
+          content.classList.remove("collapsed");
+          icon.textContent = "▼";
+          icon.style.transform = "rotate(0deg)";
+        } else {
+          content.classList.add("collapsed");
+          icon.textContent = "▶";
+          icon.style.transform = "rotate(-90deg)";
+        }
       }
     </script>
   </body>
