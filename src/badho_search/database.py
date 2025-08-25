@@ -88,11 +88,65 @@ class ProductDatabase:
             return {}
     
     def get_facets_by_brand_sku_ids(self, brand_sku_ids: List[str], only_active_keys: bool = False) -> Dict[str, List[Dict[str, Any]]]:
-        """Get facets for given brandSKU IDs"""
+        """Get facets for given brandSKU IDs - now using direct ID lookup for much faster performance"""
         if not brand_sku_ids:
             return {}
         
-        # Base query for regular facets
+        # Base query for regular facets - direct ID lookup
+        query = """
+        SELECT 
+            bsf."brandSKUId" as brand_sku_id,
+            bsf."standardKey" as standard_key,
+            COALESCE(bsf."standardValue", bsf.value) as facet_value,
+            bsf.value as original_value,
+            bsf."standardValue" as standard_value
+        FROM brands."brandSKUFacet" bsf
+        WHERE bsf."brandSKUId" = ANY(%s)
+        AND bsf."standardKey" IS NOT NULL
+        AND bsf."isActive" = true
+        AND COALESCE(bsf."standardValue", bsf.value) IS NOT NULL
+        AND TRIM(COALESCE(bsf."standardValue", bsf.value)) != ''
+        AND LOWER(TRIM(COALESCE(bsf."standardValue", bsf.value))) NOT IN ('n/a', 'na', 'null', 'none', '-')
+        """
+        
+        # Add active keys filter if requested
+        if only_active_keys:
+            query += """
+            AND EXISTS (
+                SELECT 1 FROM brands."standardFacetKeys" sfk 
+                WHERE sfk."standardKey" = bsf."standardKey" 
+                AND sfk."isActive" = true
+            )
+            """
+        
+        query += " ORDER BY bsf.\"standardKey\", facet_value"
+        
+        try:
+            results = self.db.execute_query(query, (brand_sku_ids,))
+            # Group by standard_key
+            facets = {}
+            for row in results:
+                key = row['standard_key']
+                if key not in facets:
+                    facets[key] = []
+                facets[key].append(dict(row))
+            
+            # Add price range facet
+            price_facets = self.get_price_range_facets(brand_sku_ids)
+            if price_facets:
+                facets['price_range'] = price_facets
+                
+            return facets
+        except Exception as e:
+            logger.error(f"Failed to get facets data: {e}")
+            return {}
+    
+    def get_facets_direct_by_ids(self, brand_sku_ids: List[str], only_active_keys: bool = False) -> Dict[str, List[Dict[str, Any]]]:
+        """Get facets directly by brand_sku_ids - optimized for new ID-based approach"""
+        if not brand_sku_ids:
+            return {}
+        
+        # Direct ID lookup - much faster than label matching
         query = """
         SELECT 
             bsf."brandSKUId" as brand_sku_id,
